@@ -49,6 +49,11 @@ class _StatsPageState extends ConsumerState<StatsPage>
     final history = ref.watch(usageHistoryProvider);
     final limits = ref.watch(appLimitsProvider);
 
+    // 根据选中周期选择数据源
+    final displayUsage = _selectedRange == 0
+        ? todayUsage
+        : (history['total'] ?? todayUsage);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('使用统计'),
@@ -68,13 +73,13 @@ class _StatsPageState extends ConsumerState<StatsPage>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 今日总览
-            _buildTotalCard(context),
+            // 总览
+            _buildTotalCard(context, displayUsage),
 
             const SizedBox(height: 24),
 
             // 使用时长分布（环形图）
-            _buildPieChart(context, todayUsage),
+            _buildPieChart(context, displayUsage),
 
             const SizedBox(height: 24),
 
@@ -86,12 +91,12 @@ class _StatsPageState extends ConsumerState<StatsPage>
               const SizedBox(height: 24),
 
             // 各应用限额对比柱状图
-            _buildBarChart(context, todayUsage, limits),
+            _buildBarChart(context, displayUsage, limits),
 
             const SizedBox(height: 24),
 
             // 排行榜
-            _buildRanking(context, todayUsage),
+            _buildRanking(context, displayUsage),
 
             const SizedBox(height: 80),
           ],
@@ -101,9 +106,8 @@ class _StatsPageState extends ConsumerState<StatsPage>
   }
 
   /// 总时长卡片
-  Widget _buildTotalCard(BuildContext context) {
-    final todayUsage = ref.watch(todayUsageProvider);
-    final total = todayUsage.values.fold(0.0, (s, v) => s + v);
+  Widget _buildTotalCard(BuildContext context, Map<String, double> usage) {
+    final total = usage.values.fold(0.0, (s, v) => s + v);
 
     return Card(
       child: Padding(
@@ -129,7 +133,7 @@ class _StatsPageState extends ConsumerState<StatsPage>
             ),
             const SizedBox(height: 4),
             Text(
-              '共 ${todayUsage.length} 个应用有使用记录',
+              '共 ${usage.length} 个应用有使用记录',
               style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
             ),
           ],

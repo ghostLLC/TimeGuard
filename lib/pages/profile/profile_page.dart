@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../core/constants.dart';
+import '../../models/achievement.dart';
 import '../../providers/achievement_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../services/xiaomi_helper.dart';
@@ -156,8 +157,8 @@ class ProfilePage extends ConsumerWidget {
     );
   }
 
-  Widget _buildBadgeTile(BuildContext context, achievement) {
-    final isUnlocked = achievement.isUnlocked as bool;
+  Widget _buildBadgeTile(BuildContext context, Achievement achievement) {
+    final isUnlocked = achievement.isUnlocked;
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -177,14 +178,14 @@ class ProfilePage extends ConsumerWidget {
             ),
           ),
           child: Icon(
-            _getIconData(achievement.iconName as String),
+            _getIconData(achievement.iconName),
             size: 24,
             color: isUnlocked ? AppTheme.primaryColor : Colors.grey.shade300,
           ),
         ),
         const SizedBox(height: 6),
         Text(
-          achievement.name as String,
+          achievement.name,
           style: TextStyle(
             fontSize: 11,
             fontWeight: isUnlocked ? FontWeight.w600 : FontWeight.normal,

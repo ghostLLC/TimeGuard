@@ -17,24 +17,16 @@ class FocusPage extends ConsumerStatefulWidget {
 class _FocusPageState extends ConsumerState<FocusPage> {
   int _selectedDuration = 45; // 默认 45 分钟
   final TextEditingController _nameController = TextEditingController();
-  Timer? _refreshTimer;
 
   @override
   void initState() {
     super.initState();
     _nameController.text = '专注';
-    // 定时刷新 UI（每秒更新倒计时）
-    _refreshTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted && ref.read(focusSessionProvider).status == FocusStatus.running) {
-        setState(() {}); // 触发 UI 更新
-      }
-    });
   }
 
   @override
   void dispose() {
     _nameController.dispose();
-    _refreshTimer?.cancel();
     super.dispose();
   }
 
@@ -152,9 +144,7 @@ class _FocusPageState extends ConsumerState<FocusPage> {
               const SizedBox(height: 32),
               ElevatedButton(
                 onPressed: () {
-                  // 重置状态
-                  ref.read(focusSessionProvider.notifier).cancel();
-                  ref.read(focusHistoryProvider.notifier).load();
+                  ref.read(focusSessionProvider.notifier).reset();
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppTheme.secondaryColor,

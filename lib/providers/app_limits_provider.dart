@@ -6,7 +6,11 @@ import '../database/database_helper.dart';
 /// 应用限额状态管理
 class AppLimitsNotifier extends StateNotifier<List<AppLimit>> {
   AppLimitsNotifier() : super([]) {
-    load();
+    _init();
+  }
+
+  Future<void> _init() async {
+    try { await load(); } catch (_) {}
   }
 
   Future<void> load() async {
@@ -40,7 +44,11 @@ class AppLimitsNotifier extends StateNotifier<List<AppLimit>> {
 /// 分类状态管理
 class CategoriesNotifier extends StateNotifier<List<AppCategory>> {
   CategoriesNotifier() : super([]) {
-    load();
+    _init();
+  }
+
+  Future<void> _init() async {
+    try { await load(); } catch (_) {}
   }
 
   Future<void> load() async {

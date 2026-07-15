@@ -168,4 +168,22 @@ class DailyDiscipline {
           (map['focus_total_minutes'] as num?)?.toDouble() ?? 0,
     );
   }
+
+  DailyDiscipline copyWith({
+    int? id,
+    String? date,
+    bool? allLimitsMet,
+    double? totalScreenMinutes,
+    int? focusSessionsCount,
+    double? focusTotalMinutes,
+  }) {
+    return DailyDiscipline(
+      id: id ?? this.id,
+      date: date ?? this.date,
+      allLimitsMet: allLimitsMet ?? this.allLimitsMet,
+      totalScreenMinutes: totalScreenMinutes ?? this.totalScreenMinutes,
+      focusSessionsCount: focusSessionsCount ?? this.focusSessionsCount,
+      focusTotalMinutes: focusTotalMinutes ?? this.focusTotalMinutes,
+    );
+  }
 }

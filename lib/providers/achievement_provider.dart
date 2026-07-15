@@ -6,7 +6,11 @@ import '../core/constants.dart';
 /// 成就状态管理
 class AchievementsNotifier extends StateNotifier<List<Achievement>> {
   AchievementsNotifier() : super(AchievementCatalog.all) {
-    load();
+    _init();
+  }
+
+  Future<void> _init() async {
+    try { await load(); } catch (_) {}
   }
 
   Future<void> load() async {
@@ -40,7 +44,11 @@ class AchievementsNotifier extends StateNotifier<List<Achievement>> {
 /// 积分状态
 class PointsNotifier extends StateNotifier<int> {
   PointsNotifier() : super(0) {
-    load();
+    _init();
+  }
+
+  Future<void> _init() async {
+    try { await load(); } catch (_) {}
   }
 
   Future<void> load() async {
@@ -55,7 +63,11 @@ class PointsNotifier extends StateNotifier<int> {
 /// 连续自律天数
 class StreakNotifier extends StateNotifier<int> {
   StreakNotifier() : super(0) {
-    load();
+    _init();
+  }
+
+  Future<void> _init() async {
+    try { await load(); } catch (_) {}
   }
 
   Future<void> load() async {

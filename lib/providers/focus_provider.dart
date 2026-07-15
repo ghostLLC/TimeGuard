@@ -39,43 +39,56 @@ class FocusSessionNotifier extends StateNotifier<FocusSessionState> {
   /// 取消专注
   Future<void> cancel() async {
     _timer?.cancel();
-    if (state.startedAt != null) {
-      final durationMin =
-          DateTime.now().difference(state.startedAt!).inMinutes.toDouble();
-      await DatabaseHelper.insertFocusLog(FocusSessionLog(
-        configId: state.config?.id,
-        configName: state.config?.name ?? '专注',
-        startedAt: state.startedAt!,
-        endedAt: DateTime.now(),
-        completed: false,
-        durationMinutes: durationMin,
-      ));
+    _timer = null;
+    if (state.startedAt != null && state.status == FocusStatus.running) {
+      try {
+        final durationMin =
+            DateTime.now().difference(state.startedAt!).inMinutes.toDouble();
+        await DatabaseHelper.insertFocusLog(FocusSessionLog(
+          configId: state.config?.id,
+          configName: state.config?.name ?? '专注',
+          startedAt: state.startedAt!,
+          endedAt: DateTime.now(),
+          completed: false,
+          durationMinutes: durationMin,
+        ));
+      } catch (_) {}
     }
-    state = const FocusSessionState(status: FocusStatus.cancelled);
-    // 重置为 idle
-    await Future.delayed(const Duration(seconds: 1));
+    state = const FocusSessionState();
+  }
+
+  /// 重置状态（不写日志，用于完成后"再来一次"）
+  void reset() {
+    _timer?.cancel();
+    _timer = null;
     state = const FocusSessionState();
   }
 
   /// 完成专注
   Future<void> _complete() async {
-    if (state.status != FocusStatus.running) return; // 防止取消后被误完成
+    if (state.status != FocusStatus.running) return;
     _timer?.cancel();
+    _timer = null;
     if (state.startedAt != null && state.config != null) {
-      await DatabaseHelper.insertFocusLog(FocusSessionLog(
-        configId: state.config!.id,
-        configName: state.config!.name,
-        startedAt: state.startedAt!,
-        endedAt: DateTime.now(),
-        completed: true,
-        durationMinutes: state.config!.durationMinutes.toDouble(),
-      ));
-      await DatabaseHelper.addPoints(
-        AppConstants.pointsFocusComplete,
-        'focus_complete',
-      );
+      try {
+        await DatabaseHelper.insertFocusLog(FocusSessionLog(
+          configId: state.config!.id,
+          configName: state.config!.name,
+          startedAt: state.startedAt!,
+          endedAt: DateTime.now(),
+          completed: true,
+          durationMinutes: state.config!.durationMinutes.toDouble(),
+        ));
+        await DatabaseHelper.addPoints(
+          AppConstants.pointsFocusComplete,
+          'focus_complete',
+        );
+      } catch (_) {}
     }
-    state = state.copyWith(status: FocusStatus.completed);
+    state = state.copyWith(
+      status: FocusStatus.completed,
+      remainingSeconds: 0,
+    );
   }
 
   @override
@@ -88,7 +101,11 @@ class FocusSessionNotifier extends StateNotifier<FocusSessionState> {
 /// 专注历史记录
 class FocusHistoryNotifier extends StateNotifier<List<FocusSessionLog>> {
   FocusHistoryNotifier() : super([]) {
-    load();
+    _init();
+  }
+
+  Future<void> _init() async {
+    try { await load(); } catch (_) {}
   }
 
   Future<void> load() async {

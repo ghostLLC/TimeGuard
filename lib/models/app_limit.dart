@@ -76,7 +76,7 @@ class AppLimit {
       morningLimitMinutes: map['morning_limit_minutes'] as int?,
       afternoonLimitMinutes: map['afternoon_limit_minutes'] as int?,
       eveningLimitMinutes: map['evening_limit_minutes'] as int?,
-      isActive: (map['is_active'] as int) == 1,
+      isActive: (map['is_active'] as int? ?? 1) == 1,
       overtimeIntervalMinutes:
           map['overtime_interval_minutes'] as int? ??
               AppConstants.defaultOvertimeIntervalMinutes,

@@ -111,17 +111,3 @@ class AchievementChecker {
     }
   }
 }
-
-/// DailyDiscipline copyWith 扩展
-extension DailyDisciplineCopyWith on DailyDiscipline {
-  DailyDiscipline copyWith({int? id}) {
-    return DailyDiscipline(
-      id: id ?? this.id,
-      date: date,
-      allLimitsMet: allLimitsMet,
-      totalScreenMinutes: totalScreenMinutes,
-      focusSessionsCount: focusSessionsCount,
-      focusTotalMinutes: focusTotalMinutes,
-    );
-  }
-}

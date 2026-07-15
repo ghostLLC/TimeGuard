@@ -185,6 +185,23 @@ class HomePage extends ConsumerWidget {
         padding: const EdgeInsets.only(right: 20),
         child: const Icon(Icons.delete_outline, color: Colors.red),
       ),
+      confirmDismiss: (_) async {
+        return await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('删除限额'),
+            content: Text('确定删除 ${limit.appName} 的使用限额？'),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('取消')),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                style: TextButton.styleFrom(foregroundColor: Colors.red),
+                child: const Text('删除'),
+              ),
+            ],
+          ),
+        ) ?? false;
+      },
       onDismissed: (_) {
         if (limit.id != null) {
           ref.read(appLimitsProvider.notifier).removeLimit(limit.id!);

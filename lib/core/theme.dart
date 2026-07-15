@@ -94,6 +94,26 @@ class AppTheme {
         foregroundColor: Colors.white,
         elevation: 4,
       ),
+      navigationBarTheme: NavigationBarThemeData(
+        indicatorColor: primaryColor.withOpacity(0.15),
+        labelTextStyle: const WidgetStatePropertyAll(TextStyle(fontSize: 12)),
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: const Color(0xFF1E293B),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: primaryColor, width: 2),
+        ),
+      ),
+      sliderTheme: const SliderThemeData(
+        activeTrackColor: primaryColor,
+        thumbColor: primaryColor,
+      ),
     );
   }
 }

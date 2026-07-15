@@ -1,6 +1,8 @@
+import 'package:sqflite/sqflite.dart';
+
 /// SQLite 建表 SQL
 class DatabaseMigrations {
-  static const int dbVersion = 1;
+  static const int dbVersion = 2;
 
   static const String createCategoriesTable = '''
     CREATE TABLE IF NOT EXISTS categories (
@@ -37,6 +39,9 @@ class DatabaseMigrations {
       date TEXT NOT NULL,
       package_name TEXT NOT NULL,
       usage_minutes REAL NOT NULL DEFAULT 0,
+      morning_minutes REAL NOT NULL DEFAULT 0,
+      afternoon_minutes REAL NOT NULL DEFAULT 0,
+      evening_minutes REAL NOT NULL DEFAULT 0,
       UNIQUE(date, package_name)
     )
   ''';
@@ -104,4 +109,26 @@ class DatabaseMigrations {
     CREATE INDEX IF NOT EXISTS idx_daily_discipline_date 
     ON daily_discipline(date)
   ''';
+
+  static const String createDailyUsageCompositeIndex = '''
+    CREATE INDEX IF NOT EXISTS idx_daily_usage_date_package 
+    ON daily_usage(date, package_name)
+  ''';
+
+  static const String createDailyDisciplineMetIndex = '''
+    CREATE INDEX IF NOT EXISTS idx_daily_discipline_met_date 
+    ON daily_discipline(all_limits_met, date DESC)
+  ''';
+
+  /// 增量迁移入口
+  static Future<void> upgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      // v1 → v2: 添加复合索引 + 时段列
+      await db.execute(createDailyUsageCompositeIndex);
+      await db.execute(createDailyDisciplineMetIndex);
+      await db.execute("ALTER TABLE daily_usage ADD COLUMN morning_minutes REAL NOT NULL DEFAULT 0");
+      await db.execute("ALTER TABLE daily_usage ADD COLUMN afternoon_minutes REAL NOT NULL DEFAULT 0");
+      await db.execute("ALTER TABLE daily_usage ADD COLUMN evening_minutes REAL NOT NULL DEFAULT 0");
+    }
+  }
 }

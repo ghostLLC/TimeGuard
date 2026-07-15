@@ -6,7 +6,11 @@ import '../core/utils.dart';
 /// 今日使用时长状态
 class TodayUsageNotifier extends StateNotifier<Map<String, double>> {
   TodayUsageNotifier() : super({}) {
-    load();
+    _init();
+  }
+
+  Future<void> _init() async {
+    try { await load(); } catch (_) {}
   }
 
   Future<void> load() async {

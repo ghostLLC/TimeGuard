@@ -24,6 +24,11 @@ class DatabaseHelper {
       path,
       version: DatabaseMigrations.dbVersion,
       onCreate: _onCreate,
+      onUpgrade: (db, oldVersion, newVersion) async {
+        for (var v = oldVersion; v < newVersion; v++) {
+          await DatabaseMigrations.upgrade(db, v, v + 1);
+        }
+      },
     );
   }
 
@@ -39,6 +44,8 @@ class DatabaseHelper {
     batch.execute(DatabaseMigrations.createDailyDisciplineTable);
     batch.execute(DatabaseMigrations.createDailyUsageIndex);
     batch.execute(DatabaseMigrations.createDailyDisciplineIndex);
+    batch.execute(DatabaseMigrations.createDailyUsageCompositeIndex);
+    batch.execute(DatabaseMigrations.createDailyDisciplineMetIndex);
     await batch.commit(noResult: true);
 
     // 插入默认分类
@@ -81,8 +88,23 @@ class DatabaseHelper {
 
   static Future<int> insertAppLimit(AppLimit limit) async {
     final db = await database;
-    return await db.insert('app_limits', limit.toMap(),
-        conflictAlgorithm: ConflictAlgorithm.replace);
+    // Upsert: reactivate soft-deleted row if exists, otherwise insert new
+    final existing = await db.query(
+      'app_limits',
+      where: 'package_name = ?',
+      whereArgs: [limit.packageName],
+      limit: 1,
+    );
+    if (existing.isNotEmpty) {
+      final map = limit.toMap()..['is_active'] = 1;
+      return await db.update(
+        'app_limits',
+        map,
+        where: 'id = ?',
+        whereArgs: [existing.first['id']],
+      );
+    }
+    return await db.insert('app_limits', limit.toMap());
   }
 
   static Future<int> updateAppLimit(AppLimit limit) async {
@@ -171,7 +193,7 @@ class DatabaseHelper {
       whereArgs: [date],
       orderBy: 'usage_minutes DESC',
     );
-    return maps.map((m) => DailyUsage.fromMap(m)).toList();
+    return maps.map((m) => DailyUsageWithPeriods.fromMap(m)).toList();
   }
 
   static Future<double> getAppUsageToday(String packageName) async {
@@ -225,6 +247,30 @@ class DatabaseHelper {
         'date': date,
         'package_name': packageName,
         'usage_minutes': minutes,
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  /// 持久化含时段数据的使用记录
+  static Future<void> upsertDailyUsageWithPeriods({
+    required String date,
+    required String packageName,
+    required double totalMinutes,
+    required double morningMinutes,
+    required double afternoonMinutes,
+    required double eveningMinutes,
+  }) async {
+    final db = await database;
+    await db.insert(
+      'daily_usage',
+      {
+        'date': date,
+        'package_name': packageName,
+        'usage_minutes': totalMinutes,
+        'morning_minutes': morningMinutes,
+        'afternoon_minutes': afternoonMinutes,
+        'evening_minutes': eveningMinutes,
       },
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
@@ -362,7 +408,8 @@ class DatabaseHelper {
     if (result.isEmpty) return 0;
 
     int streak = 0;
-    DateTime expected = DateTime.now();
+    final now = DateTime.now();
+    DateTime expected = DateTime(now.year, now.month, now.day);
     for (final row in result) {
       final date = DateTime.parse(row['date'] as String);
       final diff = expected.difference(date).inDays;

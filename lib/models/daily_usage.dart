@@ -59,3 +59,32 @@ class DailyUsageWithApp extends DailyUsage {
     this.categoryName,
   });
 }
+
+/// 带时段使用记录（用于时段持久化）
+class DailyUsageWithPeriods extends DailyUsage {
+  final double morningMinutes;
+  final double afternoonMinutes;
+  final double eveningMinutes;
+
+  DailyUsageWithPeriods({
+    super.id,
+    required super.date,
+    required super.packageName,
+    required super.usageMinutes,
+    required this.morningMinutes,
+    required this.afternoonMinutes,
+    required this.eveningMinutes,
+  });
+
+  factory DailyUsageWithPeriods.fromMap(Map<String, dynamic> map) {
+    return DailyUsageWithPeriods(
+      id: map['id'] as int?,
+      date: map['date'] as String,
+      packageName: map['package_name'] as String,
+      usageMinutes: (map['usage_minutes'] as num).toDouble(),
+      morningMinutes: ((map['morning_minutes'] as num?) ?? 0).toDouble(),
+      afternoonMinutes: ((map['afternoon_minutes'] as num?) ?? 0).toDouble(),
+      eveningMinutes: ((map['evening_minutes'] as num?) ?? 0).toDouble(),
+    );
+  }
+}

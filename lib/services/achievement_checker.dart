@@ -103,7 +103,7 @@ class AchievementChecker {
       ).copyWith(id: existing?.id),
     );
 
-    if (allLimitsMet) {
+    if (allLimitsMet && (existing == null || !existing.allLimitsMet)) {
       await DatabaseHelper.addPoints(
         AppConstants.pointsDisciplineDay,
         'discipline_day:$date',

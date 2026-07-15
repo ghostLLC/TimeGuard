@@ -13,8 +13,9 @@ class AppUtils {
 
   /// 将分钟数格式化为 "Xh Ym" 或 "Ym"
   static String formatMinutes(double minutes) {
-    final h = minutes ~/ 60;
-    final m = (minutes % 60).round();
+    var h = minutes ~/ 60;
+    var m = (minutes % 60).round();
+    if (m == 60) { h += 1; m = 0; } // 进位
     if (h > 0) {
       return '${h}h ${m}m';
     }
@@ -23,8 +24,9 @@ class AppUtils {
 
   /// 将分钟数格式化为 "X小时Y分钟"
   static String formatMinutesChinese(double minutes) {
-    final h = minutes ~/ 60;
-    final m = (minutes % 60).round();
+    var h = minutes ~/ 60;
+    var m = (minutes % 60).round();
+    if (m == 60) { h += 1; m = 0; } // 进位
     if (h > 0 && m > 0) {
       return '$h小时$m分钟';
     } else if (h > 0) {
@@ -58,16 +60,17 @@ class AppUtils {
     return (value / total * 100).clamp(0, 100);
   }
 
-  /// 颜色十六进制转 Color
+  /// 颜色十六进制转 Color（安全解析，无效输入返回主题色）
   static int colorFromHex(String hex) {
     hex = hex.replaceFirst('#', '');
     if (hex.length == 6) hex = 'FF$hex';
-    return int.parse(hex, radix: 16);
+    return int.tryParse(hex, radix: 16) ?? 0xFF6366F1;
   }
 
   /// Color 转十六进制
   static String colorToHex(int color) {
-    return '#${color.toRadixString(16).substring(2).toUpperCase()}';
+    final hex = color.toRadixString(16).padLeft(8, '0');
+    return '#${hex.substring(2).toUpperCase()}';
   }
 
   /// 获取进度条颜色
@@ -87,6 +90,7 @@ class AppUtils {
 
   /// 格式化倒计时秒数 → "MM:SS"
   static String formatCountdown(int totalSeconds) {
+    totalSeconds = totalSeconds.clamp(0, 999999);
     final m = totalSeconds ~/ 60;
     final s = totalSeconds % 60;
     return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
@@ -94,6 +98,7 @@ class AppUtils {
 
   /// 格式化倒计时 → "HH:MM:SS"
   static String formatCountdownLong(int totalSeconds) {
+    totalSeconds = totalSeconds.clamp(0, 999999);
     final h = totalSeconds ~/ 3600;
     final m = (totalSeconds % 3600) ~/ 60;
     final s = totalSeconds % 60;

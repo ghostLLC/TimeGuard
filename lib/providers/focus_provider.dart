@@ -59,6 +59,7 @@ class FocusSessionNotifier extends StateNotifier<FocusSessionState> {
 
   /// 完成专注
   Future<void> _complete() async {
+    if (state.status != FocusStatus.running) return; // 防止取消后被误完成
     _timer?.cancel();
     if (state.startedAt != null && state.config != null) {
       await DatabaseHelper.insertFocusLog(FocusSessionLog(

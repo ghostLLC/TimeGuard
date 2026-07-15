@@ -286,14 +286,6 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
-  flutter_foreground_task:
-    dependency: "direct main"
-    description:
-      name: flutter_foreground_task
-      sha256: "206017ee1bf864f34b8d7bce664a172717caa21af8da23f55866470dfe316644"
-      url: "https://pub.flutter-io.cn"
-    source: hosted
-    version: "8.17.0"
   flutter_lints:
     dependency: "direct dev"
     description:
@@ -1101,14 +1093,6 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "1.1.5"
-  workmanager:
-    dependency: "direct main"
-    description:
-      name: workmanager
-      sha256: f3c3ce6d79cce53eee4a29dd2e8328c25db5ba5d9062fcc5e8f3c71e0af9b7e4
-      url: "https://pub.flutter-io.cn"
-    source: hosted
-    version: "0.6.0"
   xdg_directories:
     dependency: transitive
     description:

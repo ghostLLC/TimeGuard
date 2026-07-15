@@ -173,7 +173,7 @@ class HomePage extends ConsumerWidget {
         usedMinutes, limit.dailyLimitMinutes.toDouble()));
 
     return Dismissible(
-      key: ValueKey(limit.id),
+      key: ValueKey('limit_${limit.id ?? limit.packageName}'),
       direction: DismissDirection.endToStart,
       background: Container(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),

@@ -5,6 +5,7 @@ import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import java.util.Calendar
 
 /**
@@ -38,11 +39,27 @@ class DailyResetReceiver : BroadcastReceiver() {
             }
 
             // 设置精确重复闹钟
-            alarmManager.setExactAndAllowWhileIdle(
-                AlarmManager.RTC_WAKEUP,
-                calendar.timeInMillis,
-                pendingIntent
-            )
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                if (alarmManager.canScheduleExactAlarms()) {
+                    alarmManager.setExactAndAllowWhileIdle(
+                        AlarmManager.RTC_WAKEUP,
+                        calendar.timeInMillis,
+                        pendingIntent
+                    )
+                } else {
+                    alarmManager.setAndAllowWhileIdle(
+                        AlarmManager.RTC_WAKEUP,
+                        calendar.timeInMillis,
+                        pendingIntent
+                    )
+                }
+            } else {
+                alarmManager.setExactAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    calendar.timeInMillis,
+                    pendingIntent
+                )
+            }
         }
 
         /**
@@ -67,30 +84,53 @@ class DailyResetReceiver : BroadcastReceiver() {
                 }
             }
 
-            alarmManager.setExactAndAllowWhileIdle(
-                AlarmManager.RTC_WAKEUP,
-                calendar.timeInMillis,
-                pendingIntent
-            )
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                if (alarmManager.canScheduleExactAlarms()) {
+                    alarmManager.setExactAndAllowWhileIdle(
+                        AlarmManager.RTC_WAKEUP,
+                        calendar.timeInMillis,
+                        pendingIntent
+                    )
+                } else {
+                    alarmManager.setAndAllowWhileIdle(
+                        AlarmManager.RTC_WAKEUP,
+                        calendar.timeInMillis,
+                        pendingIntent
+                    )
+                }
+            } else {
+                alarmManager.setExactAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    calendar.timeInMillis,
+                    pendingIntent
+                )
+            }
         }
     }
 
     override fun onReceive(context: Context, intent: Intent) {
         val type = intent.getStringExtra("type")
 
-        when (type) {
-            "review" -> {
-                // 触发每日复盘（通过 Flutter 侧处理，这里发送广播）
-                val flutterIntent = Intent("com.timeguard.DAILY_REVIEW")
-                context.sendBroadcast(flutterIntent)
-                // 重新安排明天的复盘
-                scheduleDailyReview(context, 22, 0)
+        try {
+            when (type) {
+                "review" -> {
+                    val flutterIntent = Intent("com.timeguard.DAILY_REVIEW").apply {
+                        setPackage(context.packageName)
+                    }
+                    context.sendBroadcast(flutterIntent)
+                }
+                else -> {
+                    val flutterIntent = Intent("com.timeguard.DAILY_RESET").apply {
+                        setPackage(context.packageName)
+                    }
+                    context.sendBroadcast(flutterIntent)
+                }
             }
-            else -> {
-                // 每日重置：通知 Flutter 侧清零
-                val flutterIntent = Intent("com.timeguard.DAILY_RESET")
-                context.sendBroadcast(flutterIntent)
-                // 重新安排明天的重置
+        } finally {
+            // 无论是否异常，都必须续链闹钟
+            if (type == "review") {
+                scheduleDailyReview(context, 22, 0)
+            } else {
                 scheduleDailyReset(context)
             }
         }

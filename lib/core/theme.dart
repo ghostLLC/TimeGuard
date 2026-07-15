@@ -40,10 +40,9 @@ class AppTheme {
         foregroundColor: Colors.white,
         elevation: 4,
       ),
-      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: primaryColor,
-        unselectedItemColor: Colors.grey,
+      navigationBarTheme: const NavigationBarThemeData(
+        indicatorColor: primaryColor,
+        labelTextStyle: WidgetStatePropertyAll(TextStyle(fontSize: 12)),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,

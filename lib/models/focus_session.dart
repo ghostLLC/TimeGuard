@@ -121,6 +121,7 @@ class FocusSessionLog {
     return {
       if (id != null) 'id': id,
       'config_id': configId,
+      'config_name': configName,
       'started_at': startedAt.toIso8601String(),
       'ended_at': endedAt?.toIso8601String(),
       'completed': completed ? 1 : 0,

@@ -42,16 +42,16 @@ class XiaomiHelper {
   }
 
   /// 打开电池优化设置
+  /// 注意：app_settings 包不支持直接跳转电池优化页，打开通用设置页后用户需手动导航
   static Future<void> openBatteryOptimizationSettings() async {
     await AppSettings.openAppSettings();
   }
 
-  /// 打开自启动管理（小米特有，通过 Intent 跳转）
-  /// 注意：不同小米系统版本 Intent 不同，这里提供通用方案
+  /// 打开自启动管理
+  /// 注意：小米自启动管理需要特定 Intent，app_settings 包不支持
+  /// 打开通用应用设置页，用户需手动进入自启动管理
   static Future<void> openAutoStartSettings() async {
-    // 小米自启动管理需要通过特殊 Intent 打开
-    // 由于 Flutter 限制，这里引导用户手动操作
-    await AppSettings.openAppSettings(type: AppSettingsType.internalStorage);
+    await AppSettings.openAppSettings();
   }
 
   /// 获取小米适配引导文案

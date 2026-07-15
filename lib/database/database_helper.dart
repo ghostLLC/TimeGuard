@@ -10,13 +10,11 @@ import '../core/utils.dart';
 import 'migrations.dart';
 
 class DatabaseHelper {
-  static Database? _database;
   static const String _dbName = 'timeguard.db';
+  static Future<Database>? _dbFuture;
 
   static Future<Database> get database async {
-    if (_database != null) return _database!;
-    _database = await _initDatabase();
-    return _database!;
+    return _dbFuture ??= _initDatabase();
   }
 
   static Future<Database> _initDatabase() async {

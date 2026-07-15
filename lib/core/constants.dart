@@ -23,11 +23,11 @@ class AppConstants {
 
   // ── 预设分类 ──
   static const List<Map<String, dynamic>> defaultCategories = [
-    {'name': '社交', 'iconName': 'chat', 'colorHex': '#6366F1'},
-    {'name': '娱乐', 'iconName': 'play_circle', 'colorHex': '#EC4899'},
-    {'name': '学习', 'iconName': 'school', 'colorHex': '#10B981'},
-    {'name': '购物', 'iconName': 'shopping_bag', 'colorHex': '#F59E0B'},
-    {'name': '工具', 'iconName': 'build', 'colorHex': '#6B7280'},
+    {'name': '社交', 'icon_name': 'chat', 'color_hex': '#6366F1'},
+    {'name': '娱乐', 'icon_name': 'play_circle', 'color_hex': '#EC4899'},
+    {'name': '学习', 'icon_name': 'school', 'color_hex': '#10B981'},
+    {'name': '购物', 'icon_name': 'shopping_bag', 'color_hex': '#F59E0B'},
+    {'name': '工具', 'icon_name': 'build', 'color_hex': '#6B7280'},
   ];
 
   // ── 常见应用分类映射 ──
@@ -112,8 +112,11 @@ extension TimePeriodExtension on TimePeriod {
   }
 
   /// 根据当前小时获取时段
+  /// 注意：0-5 时（凌晨）归入晚上时段，视为前一天晚上的延续
   static TimePeriod fromHour(int hour) {
-    if (hour >= AppConstants.morningStart && hour < AppConstants.afternoonStart) {
+    if (hour >= 0 && hour < AppConstants.morningStart) {
+      return TimePeriod.evening; // 凌晨归入晚上
+    } else if (hour >= AppConstants.morningStart && hour < AppConstants.afternoonStart) {
       return TimePeriod.morning;
     } else if (hour >= AppConstants.afternoonStart && hour < AppConstants.eveningStart) {
       return TimePeriod.afternoon;

@@ -46,12 +46,14 @@ class _AddLimitSheetState extends ConsumerState<AddLimitSheet> {
             app.name!.isNotEmpty;
       }).toList();
       filtered.sort((a, b) => (a.name ?? '').compareTo(b.name ?? ''));
+      if (!mounted) return;
       setState(() {
         _apps = filtered;
         _filteredApps = filtered;
         _loading = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() => _loading = false);
     }
   }

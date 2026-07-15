@@ -36,7 +36,7 @@ class AppCategory {
       name: map['name'] as String,
       iconName: map['icon_name'] as String? ?? 'folder',
       dailyLimitMinutes: map['daily_limit_minutes'] as int?,
-      color: Color(int.parse(colorHex.replaceFirst('#', 'FF'), radix: 16)),
+      color: Color(int.tryParse(colorHex.replaceFirst('#', 'FF'), radix: 16) ?? 0xFF6366F1),
       isActive: (map['is_active'] as int? ?? 1) == 1,
     );
   }

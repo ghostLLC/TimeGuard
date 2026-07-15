@@ -62,6 +62,12 @@ class NotificationService {
     // 点击通知后的处理（可扩展：跳转到对应页面）
   }
 
+  // 通知 ID 分配（避免 hashCode 冲突）
+  static final Map<String, int> _notificationIds = {};
+  static int _nextId = 5000;
+  static int _getId(String key) =>
+      _notificationIds.putIfAbsent(key, () => _nextId++);
+
   /// 发送超时通知
   static Future<void> sendOvertimeNotification(
     String appName,
@@ -80,7 +86,7 @@ class NotificationService {
     );
 
     await _plugin.show(
-      AppConstants.notificationChannelOvertime + appName.hashCode % 1000,
+      _getId('overtime:$appName'),
       '$appName 使用超时',
       '已使用 ${AppUtils.formatMinutes(usedMinutes)}，'
       '超过每日限额 ${AppUtils.formatMinutes(limitMinutes.toDouble())}',
@@ -97,7 +103,7 @@ class NotificationService {
     if (!_initialized) return;
 
     await _plugin.show(
-      AppConstants.notificationChannelOvertime + categoryName.hashCode % 1000,
+      _getId('category:$categoryName'),
       '$categoryName 类应用超时',
       '已使用 ${AppUtils.formatMinutes(usedMinutes)}，'
       '超过分类限额 ${AppUtils.formatMinutes(limitMinutes.toDouble())}',

@@ -284,7 +284,7 @@ class HomePage extends ConsumerWidget {
               )
             else
               Text(
-                '剩 ${AppUtils.formatMinutes(remaining)}',
+                '剩 ${AppUtils.formatMinutes(remaining.toDouble())}',
                 style: TextStyle(
                   fontSize: 12,
                   color: Colors.grey.shade500,

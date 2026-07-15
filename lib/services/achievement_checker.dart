@@ -1,6 +1,7 @@
 import '../database/database_helper.dart';
 import '../core/constants.dart';
-import 'achievement_provider.dart';
+import '../models/achievement.dart';
+import '../providers/achievement_provider.dart';
 
 /// 成就检测器 — 每日/每次操作后调用
 class AchievementChecker {

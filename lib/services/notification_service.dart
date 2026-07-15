@@ -84,7 +84,7 @@ class NotificationService {
       '$appName 使用超时',
       '已使用 ${AppUtils.formatMinutes(usedMinutes)}，'
       '超过每日限额 ${AppUtils.formatMinutes(limitMinutes.toDouble())}',
-      const NotificationDetails(android: androidDetails),
+      NotificationDetails(android: androidDetails),
     );
   }
 

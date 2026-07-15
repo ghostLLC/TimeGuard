@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:installed_apps/installed_apps.dart';
 import 'package:installed_apps/app_info.dart';
 import '../../models/app_limit.dart';
+import '../../models/category.dart';
 import '../../core/constants.dart';
 import '../../core/theme.dart';
 import '../../providers/app_limits_provider.dart';
@@ -274,7 +275,7 @@ class _AddLimitSheetState extends ConsumerState<AddLimitSheet> {
           Wrap(
             spacing: 8,
             runSpacing: 8,
-            children: categories.map<AppCategory>((c) {
+            children: categories.map<Widget>((c) {
               final isSelected = _selectedCategoryId == c.id;
               return ChoiceChip(
                 label: Row(

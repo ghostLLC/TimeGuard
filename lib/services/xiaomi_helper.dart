@@ -43,7 +43,7 @@ class XiaomiHelper {
 
   /// 打开电池优化设置
   static Future<void> openBatteryOptimizationSettings() async {
-    await AppSettings.openAppSettings(type: AppSettingsType.battery);
+    await AppSettings.openAppSettings();
   }
 
   /// 打开自启动管理（小米特有，通过 Intent 跳转）

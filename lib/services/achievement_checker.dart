@@ -1,7 +1,6 @@
 import '../database/database_helper.dart';
 import '../core/constants.dart';
 import '../models/achievement.dart';
-import '../providers/achievement_provider.dart';
 
 /// 成就检测器 — 每日/每次操作后调用
 class AchievementChecker {
@@ -88,10 +87,6 @@ class AchievementChecker {
     required double focusTotalMinutes,
   }) async {
     final existing = await DatabaseHelper.getDailyDiscipline(date);
-    if (existing != null && existing.allLimitsMet && !allLimitsMet) {
-      // 已从达标变为不达标，不覆盖
-      return;
-    }
 
     await DatabaseHelper.upsertDailyDiscipline(
       DailyDiscipline(

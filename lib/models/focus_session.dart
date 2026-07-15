@@ -43,7 +43,8 @@ class FocusSessionConfig {
       blockedCategories: (map['blocked_categories'] as String?)
               ?.split(',')
               .where((s) => s.isNotEmpty)
-              .map((s) => int.tryParse(s) ?? 0)
+              .map((s) => int.tryParse(s))
+              .whereType<int>()
               .toList() ??
           [],
       strictMode: (map['strict_mode'] as int? ?? 0) == 1,

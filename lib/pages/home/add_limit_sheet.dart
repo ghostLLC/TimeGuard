@@ -187,7 +187,7 @@ class _AddLimitSheetState extends ConsumerState<AddLimitSheet> {
   }
 
   /// 限额配置
-  Widget _buildLimitConfig(BuildContext context, List categories) {
+  Widget _buildLimitConfig(BuildContext context, List<AppCategory> categories) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(

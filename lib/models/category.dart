@@ -24,7 +24,7 @@ class AppCategory {
       'name': name,
       'icon_name': iconName,
       'daily_limit_minutes': dailyLimitMinutes,
-      'color_hex': '#${color.value.toRadixString(16).substring(2).toUpperCase()}',
+      'color_hex': '#${color.value.toRadixString(16).padLeft(8, '0').substring(2).toUpperCase()}',
       'is_active': isActive ? 1 : 0,
     };
   }

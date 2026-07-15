@@ -52,7 +52,7 @@ class _StatsPageState extends ConsumerState<StatsPage>
     // 根据选中周期选择数据源
     final displayUsage = _selectedRange == 0
         ? todayUsage
-        : (history['total'] ?? todayUsage);
+        : (history['total'] ?? <String, double>{});
 
     return Scaffold(
       appBar: AppBar(
@@ -369,7 +369,9 @@ class _StatsPageState extends ConsumerState<StatsPage>
                         color: rank <= 3
                             ? [Colors.amber, Colors.grey.shade400,
                                 const Color(0xFFCD7F32)][rank - 1]
-                            : Colors.grey.shade100,
+                            : Theme.of(context).brightness == Brightness.dark
+                                ? Colors.grey.shade700
+                                : Colors.grey.shade100,
                         shape: BoxShape.circle,
                       ),
                       alignment: Alignment.center,

@@ -69,15 +69,21 @@ class FocusSessionNotifier extends StateNotifier<FocusSessionState> {
     if (state.status != FocusStatus.running) return;
     _timer?.cancel();
     _timer = null;
-    if (state.startedAt != null && state.config != null) {
+    // 立即更新状态，防止 cancel() 在 await 期间竞态
+    final savedState = state;
+    state = state.copyWith(
+      status: FocusStatus.completed,
+      remainingSeconds: 0,
+    );
+    if (savedState.startedAt != null && savedState.config != null) {
       try {
         await DatabaseHelper.insertFocusLog(FocusSessionLog(
-          configId: state.config!.id,
-          configName: state.config!.name,
-          startedAt: state.startedAt!,
+          configId: savedState.config!.id,
+          configName: savedState.config!.name,
+          startedAt: savedState.startedAt!,
           endedAt: DateTime.now(),
           completed: true,
-          durationMinutes: state.config!.durationMinutes.toDouble(),
+          durationMinutes: savedState.config!.durationMinutes.toDouble(),
         ));
         await DatabaseHelper.addPoints(
           AppConstants.pointsFocusComplete,
@@ -85,10 +91,6 @@ class FocusSessionNotifier extends StateNotifier<FocusSessionState> {
         );
       } catch (_) {}
     }
-    state = state.copyWith(
-      status: FocusStatus.completed,
-      remainingSeconds: 0,
-    );
   }
 
   @override

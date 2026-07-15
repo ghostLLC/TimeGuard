@@ -28,9 +28,9 @@ class BootReceiver : BroadcastReceiver() {
             DailyResetReceiver.scheduleDailyReset(context)
 
             // 设置每日复盘闹钟（从 SharedPreferences 读取用户偏好时间）
-            val prefs: SharedPreferences = context.getSharedPreferences("timeguard_prefs", Context.MODE_PRIVATE)
-            val reviewHour = prefs.getInt("daily_review_hour", 22)
-            val reviewMinute = prefs.getInt("daily_review_minute", 0)
+            val prefs: SharedPreferences = context.getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
+            val reviewHour = prefs.getInt("flutter.daily_review_hour", 22)
+            val reviewMinute = prefs.getInt("flutter.daily_review_minute", 0)
             DailyResetReceiver.scheduleDailyReview(context, reviewHour, reviewMinute)
         }
     }

@@ -7,12 +7,14 @@ class AppSettings {
   final bool autoStartChecked;
   final int dailyReviewHour;
   final int dailyReviewMinute;
+  final bool isLoading;
 
   const AppSettings({
     this.onboardingDone = false,
     this.autoStartChecked = false,
     this.dailyReviewHour = 22,
     this.dailyReviewMinute = 0,
+    this.isLoading = true,
   });
 
   AppSettings copyWith({
@@ -20,19 +22,25 @@ class AppSettings {
     bool? autoStartChecked,
     int? dailyReviewHour,
     int? dailyReviewMinute,
+    bool? isLoading,
   }) {
     return AppSettings(
       onboardingDone: onboardingDone ?? this.onboardingDone,
       autoStartChecked: autoStartChecked ?? this.autoStartChecked,
       dailyReviewHour: dailyReviewHour ?? this.dailyReviewHour,
       dailyReviewMinute: dailyReviewMinute ?? this.dailyReviewMinute,
+      isLoading: isLoading ?? this.isLoading,
     );
   }
 }
 
 class SettingsNotifier extends StateNotifier<AppSettings> {
   SettingsNotifier() : super(const AppSettings()) {
-    load();
+    _init();
+  }
+
+  Future<void> _init() async {
+    try { await load(); } catch (_) {}
   }
 
   Future<void> load() async {
@@ -46,6 +54,7 @@ class SettingsNotifier extends StateNotifier<AppSettings> {
           prefs.getInt(AppConstants.keyDailyReviewHour) ?? 22,
       dailyReviewMinute:
           prefs.getInt(AppConstants.keyDailyReviewMinute) ?? 0,
+      isLoading: false,
     );
   }
 

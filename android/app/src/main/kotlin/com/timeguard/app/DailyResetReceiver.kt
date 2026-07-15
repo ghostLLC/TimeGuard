@@ -129,7 +129,10 @@ class DailyResetReceiver : BroadcastReceiver() {
         } finally {
             // 无论是否异常，都必须续链闹钟
             if (type == "review") {
-                scheduleDailyReview(context, 22, 0)
+                val prefs = context.getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
+                val reviewHour = prefs.getInt("flutter.daily_review_hour", 22)
+                val reviewMinute = prefs.getInt("flutter.daily_review_minute", 0)
+                scheduleDailyReview(context, reviewHour, reviewMinute)
             } else {
                 scheduleDailyReset(context)
             }

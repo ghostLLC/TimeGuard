@@ -41,6 +41,7 @@ class UsageHistoryNotifier
     final endDate = dates.last;
     final data = await DatabaseHelper.getUsageByDateRange(startDate, endDate);
     state = {
+      ...state,
       'total': data,
     };
   }

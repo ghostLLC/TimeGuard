@@ -79,7 +79,10 @@ class _TimeGuardAppState extends ConsumerState<TimeGuardApp> {
   }
 
   String? _redirect(BuildContext context, GoRouterState state) {
-    final onboardingDone = ref.read(settingsProvider).onboardingDone;
+    final settings = ref.read(settingsProvider);
+    // 加载中不做跳转，避免已完成引导的用户闪现引导页
+    if (settings.isLoading) return null;
+    final onboardingDone = settings.onboardingDone;
     final isOnboarding = state.uri.path == '/onboarding';
 
     // 已完成引导 → 不允许回到引导页

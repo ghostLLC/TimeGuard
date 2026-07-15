@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:collection/collection.dart';
 import 'package:usage_stats/usage_stats.dart';
 import '../database/database_helper.dart';
 import '../models/app_limit.dart';
@@ -12,19 +13,18 @@ class UsageTrackingService {
   Timer? _trackingTimer;
   String? _lastForegroundPackage;
   DateTime? _lastCheckTime;
+  String? _lastDate; // 用于检测跨日
 
-  // 全天累计（分钟）
   final Map<String, double> _sessionUsage = {};
-  // 按时段独立累计
   final Map<String, double> _morningUsage = {};
   final Map<String, double> _afternoonUsage = {};
   final Map<String, double> _eveningUsage = {};
 
-  // 缓存：限额和分类
   Map<String, AppLimit> _limitCache = {};
   Map<int, AppCategory> _categoryCache = {};
-  // 分类 → 所属应用包名列表（含无独立限额的应用）
   Map<int, List<String>> _categoryAppsCache = {};
+  // 包名 → 分类 ID（用于无独立限额的应用查找分类）
+  Map<String, int> _packageCategoryMap = {};
 
   void Function(String packageName, double totalMinutes)? onUsageUpdated;
   void Function(String packageName, double usedMinutes, int limitMinutes)?
@@ -39,6 +39,7 @@ class UsageTrackingService {
 
   Future<void> start() async {
     if (_trackingTimer?.isActive ?? false) return;
+    _lastDate = AppUtils.todayString();
     await _preloadTodayUsage();
     await _refreshCache();
     _lastCheckTime = DateTime.now();
@@ -68,22 +69,27 @@ class UsageTrackingService {
     final categories = await DatabaseHelper.getCategories();
     _categoryCache = {for (final c in categories) if (c.id != null) c.id!: c};
 
-    // 构建分类 → 应用列表（包括通过 packageCategoryMap 映射的）
     _categoryAppsCache = {};
+    _packageCategoryMap = {};
+
+    // 从限额中提取分类映射
     for (final limit in limits) {
       if (limit.categoryId != null) {
         _categoryAppsCache
             .putIfAbsent(limit.categoryId!, () => [])
             .add(limit.packageName);
+        _packageCategoryMap[limit.packageName] = limit.categoryId!;
       }
     }
-    // 加入没有独立限额但通过预设映射属于某分类的应用
+
+    // 加入预设映射中无独立限额的应用
     for (final entry in AppConstants.packageCategoryMap.entries) {
       final cat = categories.where((c) => c.name == entry.value).firstOrNull;
-      if (cat?.id != null && !_limitCache.containsKey(entry.key)) {
+      if (cat?.id != null) {
         _categoryAppsCache
             .putIfAbsent(cat!.id!, () => [])
             .add(entry.key);
+        _packageCategoryMap.putIfAbsent(entry.key, () => cat.id!);
       }
     }
   }
@@ -120,6 +126,15 @@ class UsageTrackingService {
   Future<void> _pollUsage() async {
     try {
       final now = DateTime.now();
+      final todayDate = AppUtils.todayString();
+
+      // 跨日检测：自动重置
+      if (_lastDate != null && _lastDate != todayDate) {
+        resetDaily();
+        await _preloadTodayUsage(); // 重新加载（可能已有数据）
+      }
+      _lastDate = todayDate;
+
       final start = _lastCheckTime ??
           now.subtract(Duration(seconds: AppConstants.trackingIntervalSeconds));
 
@@ -129,7 +144,7 @@ class UsageTrackingService {
         return;
       }
 
-      // 只匹配 RESUMED 事件（API 29+: eventType=2）
+      // 只匹配 RESUMED 事件
       String? currentForeground;
       for (final event in events.reversed) {
         if (event.eventType == 2) {
@@ -137,26 +152,24 @@ class UsageTrackingService {
           break;
         }
       }
-      currentForeground ??= events.last.packageName;
+      // 无 RESUMED 事件时沿用上次前台应用（而非取 events.last）
+      currentForeground ??= _lastForegroundPackage;
 
       final elapsed = now.difference(start);
       final elapsedMinutes = elapsed.inMilliseconds / 60000.0;
 
       if (currentForeground != null &&
           !_isSystemPackage(currentForeground)) {
-        // 更新全天累计
         _sessionUsage[currentForeground] =
             (_sessionUsage[currentForeground] ?? 0) + elapsedMinutes;
 
-        // 更新当前时段累计
         final period = TimePeriodExtension.fromHour(now.hour);
         final periodMap = _getPeriodMap(period);
         periodMap[currentForeground] =
             (periodMap[currentForeground] ?? 0) + elapsedMinutes;
 
-        // 持久化（含时段数据）
         await DatabaseHelper.upsertDailyUsageWithPeriods(
-          date: AppUtils.todayString(),
+          date: todayDate,
           packageName: currentForeground,
           totalMinutes: _sessionUsage[currentForeground]!,
           morningMinutes: _morningUsage[currentForeground] ?? 0,
@@ -196,7 +209,8 @@ class UsageTrackingService {
     if (limit == null || !limit.isActive) return;
 
     if (usedMinutes >= limit.dailyLimitMinutes) {
-      _notifyOvertime(packageName, usedMinutes, limit.dailyLimitMinutes);
+      _notifyOvertime(packageName, usedMinutes, limit.dailyLimitMinutes,
+          limit.overtimeIntervalMinutes);
       return;
     }
 
@@ -204,21 +218,24 @@ class UsageTrackingService {
     if (periodLimit != null) {
       final periodUsage = getPeriodUsage(packageName, period);
       if (periodUsage >= periodLimit) {
-        _notifyOvertime(packageName, periodUsage, periodLimit);
+        _notifyOvertime(
+            packageName, periodUsage, periodLimit, limit.overtimeIntervalMinutes);
       }
     }
   }
 
-  /// 检查分类限额 — 包含所有属于该分类的应用（含无独立限额的）
+  /// 检查分类限额 — 支持无独立限额的应用通过 packageCategoryMap 查找分类
   void _checkCategoryLimitFromCache(String packageName) {
-    final limit = _limitCache[packageName];
-    if (limit?.categoryId == null) return;
+    int? categoryId = _limitCache[packageName]?.categoryId;
+    // 无独立限额时，从映射表查找分类
+    categoryId ??= _packageCategoryMap[packageName];
+    if (categoryId == null) return;
 
-    final category = _categoryCache[limit!.categoryId!];
+    final category = _categoryCache[categoryId];
     if (category == null || category.dailyLimitMinutes == null) return;
 
     double categoryTotal = 0;
-    final apps = _categoryAppsCache[category.id!] ?? [];
+    final apps = _categoryAppsCache[categoryId] ?? [];
     for (final pkg in apps) {
       categoryTotal += _sessionUsage[pkg] ?? 0;
     }
@@ -230,12 +247,12 @@ class UsageTrackingService {
   }
 
   void _notifyOvertime(
-      String packageName, double usedMinutes, int limitMinutes) {
+      String packageName, double usedMinutes, int limitMinutes,
+      [int intervalMinutes = AppConstants.defaultOvertimeIntervalMinutes]) {
     final lastNotif = _lastOvertimeNotification[packageName];
     final now = DateTime.now();
     if (lastNotif != null &&
-        now.difference(lastNotif).inSeconds <
-            AppConstants.defaultOvertimeIntervalMinutes * 60) {
+        now.difference(lastNotif).inSeconds < intervalMinutes * 60) {
       return;
     }
     _lastOvertimeNotification[packageName] = now;
@@ -255,7 +272,6 @@ class UsageTrackingService {
     onCategoryOvertime?.call(categoryName, usedMinutes, limitMinutes);
   }
 
-  /// 系统包名过滤 — 仅排除真正的系统组件，不排除 Google 应用
   bool _isSystemPackage(String packageName) {
     return packageName == 'com.android.systemui' ||
         packageName == 'com.android.settings' ||
